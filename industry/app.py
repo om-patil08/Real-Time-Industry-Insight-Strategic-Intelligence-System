@@ -662,10 +662,17 @@ if st.session_state.get("ok"):
             st.plotly_chart(fig_bar, use_container_width=True)
 
             # ── 2. DONUT CHART ─────────────────────────────
-            total = sum(counts)
-            if total == 0: 
-               total = 1  # prevent division by zero
-            percentages = [round((c / total) * 100, 1) for c in counts]
+            try:
+                total = sum(counts) or 1
+                percentages = [round((c / total) * 100, 1) for c in counts]
+                fig_donut = go.Figure(data=[go.Pie(
+                    labels=brands_list,
+                    values=counts,
+                    hole=0.5,
+                )])
+                st.plotly_chart(fig_donut)
+            except Exception as e:
+               st.warning(f"Chart unavailable: {e}")
 
             fig_donut = go.Figure(data=[go.Pie(
                 labels=brands_list,
