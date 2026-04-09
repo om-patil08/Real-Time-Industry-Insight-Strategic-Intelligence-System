@@ -20,8 +20,26 @@ from fastmcp import FastMCP
 from serpapi import GoogleSearch
 
 # ── Load env (resolve relative to this file so subprocess spawning works) ────
-_env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
-load_dotenv(_env_path)
+from pathlib import Path
+
+for _env_path in [
+    Path(__file__).parent / ".env",
+    Path(__file__).parent.parent / ".env",
+    Path(".env"),
+]:
+    if _env_path.exists():
+        load_dotenv(_env_path)
+        break
+
+# Streamlit Cloud secrets fallback
+try:
+    import streamlit as st
+    if hasattr(st, "secrets"):
+        for k, v in st.secrets.items():
+            os.environ.setdefault(k, str(v))
+except Exception:
+    pass
+
 SERP_KEY = os.getenv("SERP_API_KEY")
 
 # ── FastMCP instance ────────────────────────────────────────────────────────

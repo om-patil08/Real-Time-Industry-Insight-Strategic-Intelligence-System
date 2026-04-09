@@ -7,8 +7,26 @@ import os
 # ── Path & env setup ────────────────────────────────────────────────────────
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from dotenv import load_dotenv
-from dotenv import load_dotenv
-load_dotenv()
+from pathlib import Path
+
+# Load .env from multiple possible locations
+for _env_path in [
+    Path(__file__).parent / ".env",
+    Path(__file__).parent.parent / ".env",
+    Path(".env"),
+]:
+    if _env_path.exists():
+        load_dotenv(_env_path)
+        break
+
+# Streamlit Cloud secrets fallback — inject into os.environ
+try:
+    import streamlit as _st
+    if hasattr(_st, "secrets"):
+        for _k, _v in _st.secrets.items():
+            os.environ.setdefault(_k, str(_v))
+except Exception:
+    pass
 
 from fastmcp import Client
 import plotly.express as px  
@@ -667,20 +685,13 @@ if st.session_state.get("ok"):
                 percentages = [round((c / total) * 100, 1) for c in counts]
                 fig_donut = go.Figure(data=[go.Pie(
                     labels=brands_list,
-                    values=counts,
-                    hole=0.5,
+                    values=percentages,
+                    hole=0.6,
                 )])
-                st.plotly_chart(fig_donut)
+                fig_donut.update_layout(**PLOTLY_LAYOUT)
+                st.plotly_chart(fig_donut, use_container_width=True)
             except Exception as e:
-               st.warning(f"Chart unavailable: {e}")
-
-            fig_donut = go.Figure(data=[go.Pie(
-                labels=brands_list,
-                values=percentages,
-                hole=0.6
-            )])
-            fig_donut.update_layout(**PLOTLY_LAYOUT)
-            st.plotly_chart(fig_donut, use_container_width=True)
+                st.warning(f"Chart unavailable: {e}")
 
         # ── 3. AI INSIGHTS ───────────────────────────────
         st.markdown("### 🤖 Trend Insights")
