@@ -663,6 +663,8 @@ if st.session_state.get("ok"):
 
             # ── 2. DONUT CHART ─────────────────────────────
             total = sum(counts)
+            if total == 0: 
+               total = 1  # prevent division by zero
             percentages = [round((c / total) * 100, 1) for c in counts]
 
             fig_donut = go.Figure(data=[go.Pie(
